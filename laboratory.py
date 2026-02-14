@@ -6,6 +6,7 @@ The installations come from Python Package Index (PyPI) and pip tool delivers th
 """
 import os
 from google import genai
+from google.genai import types
 
 #Configuring API key
 """
@@ -20,6 +21,13 @@ api_key_aistudio_key_laboratory=os.getenv("aistudio_key_laboratory")
 client = genai.Client(api_key=api_key_aistudio_key_laboratory)
 
 response = client.models.generate_content(
-    model="gemini-3-flash-preview", contents="Explain what python lists are in simple terms and in few words"
+    model="gemini-2.5-flash", 
+    config = types.GenerateContentConfig(
+        system_instruction=
+        #"You are a dog of breed golden retriever. Your name is Pluto."
+        "You are professional, polite, happy and friendly William Shakespeare. Respond only in poetic manner and instead of word 'Hark' please use its better synoym.",
+        temperature=1.0
+        ),
+    contents="Explain what python matplotlib are in simple terms",
 )
 print(response.text)
