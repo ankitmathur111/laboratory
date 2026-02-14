@@ -25,8 +25,8 @@ A beginner-friendly Python project to explore and interact with **Google Gemini 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/ankitmathur111/laboratory.git
+cd laboratory
 ```
 
 ### 2. Install Dependencies
@@ -79,7 +79,7 @@ The script:
 ## 📁 Project Structure
 
 ```
-your-repo-name/
+laboratory/
 │
 ├── main.py          # Main script to interact with Gemini AI
 └── README.md        # You are here!
@@ -126,7 +126,7 @@ You can tweak the following in `main.py` to experiment:
 
 ## 🙋 About
 
-This project was built as part of a **personal Python learning journey** — exploring how to connect Python scripts to AI models and eventually build shareable web apps using tools like Streamlit.
+This project was built by **[@ankitmathur111](https://github.com/ankitmathur111)** as part of a **personal Python learning journey** — exploring how to connect Python scripts to AI models and eventually build shareable web apps using tools like Streamlit.
 
 ---
 
