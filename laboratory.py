@@ -18,7 +18,16 @@ We can simply use the client without passing the API key and
 keep name of original envionment variable as `GEMINI_API_KEY`.
 """
 api_key_aistudio_key_laboratory=os.getenv("aistudio_key_laboratory")
-client = genai.Client(api_key=api_key_aistudio_key_laboratory)
+client = genai.Client(api_key=api_key_aistudio_key_laboratory,
+                        http_options=types.HttpOptions(
+                                retry_options=types.HttpRetryOptions(
+                                    attempts=5,              # Max retry attempts
+                                    initial_delay=5.0,       # Seconds to wait before first retry
+                                    # Explicitly include 503 in retryable codes
+                                    http_status_codes=[408, 429, 500, 502, 503, 504]
+                                )
+                            )
+                        )
 
 response = client.models.generate_content_stream(
     model="gemini-2.5-flash", 
