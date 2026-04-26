@@ -284,6 +284,36 @@ def show_chat():
         st.markdown("### 🎓 LearnMate AI (by Ankit Mathur for APL 2026)")
         st.markdown("---")
 
+        # ── API Key override (when free-tier key exhausts) ────────────────────
+        with st.expander("🔑 Use your own API key"):
+            st.markdown(
+                "<small style='color:#6688AA;'>If the pre-loaded key stops working, "
+                "paste your own Gemini key here to continue without interruption.</small>",
+                unsafe_allow_html=True,
+            )
+            override_key = st.text_input(
+                "Gemini API Key",
+                value="",
+                type="password",
+                placeholder="Paste your key from aistudio.google.com/apikey",
+                key="sidebar_api_key_input",
+            )
+            if st.button("✅ Apply Key", use_container_width=True, key="apply_override_key"):
+                if override_key.strip():
+                    st.session_state.api_key = override_key.strip()
+                    # Reinitialise agent with new key, keeping same profile
+                    from learnmate_agent import LearnMateAgent
+                    st.session_state.agent = LearnMateAgent(
+                        api_key=override_key.strip(),
+                        profile=st.session_state.profile,
+                    )
+                    st.success("✅ Key applied! You're good to go.")
+                    st.rerun()
+                else:
+                    st.warning("Please paste a valid API key first.")
+
+        st.markdown("---")
+
         # Profile card
         comp = profile.comprehension_score
         comp_color = "#FF6688" if comp < 45 else "#FFAA44" if comp < 65 else "#44CC88"
