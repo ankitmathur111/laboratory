@@ -1,3 +1,6 @@
+# PROJECT : LearnMate AI — Adaptive Learning Agent
+# FILE    : dashboard.py
+# DEPLOY  : gcloud run deploy learnmate-ai
 """
 dashboard.py
 ------------
@@ -12,10 +15,11 @@ from learner_profile import (
     DIFFICULTY_LEVELS, LearnerProfile, get_store
 )
 from agent_tools import get_session_log, get_active_profile
+from key_manager import load_api_key, mask_key, is_running_on_cloud
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="LearnMate AI",
+    page_title="LearnMate AI (by Ankit Mathur for APL 2026)",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -24,68 +28,109 @@ st.set_page_config(
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .stApp { background-color: #0D1117; }
-    section[data-testid="stSidebar"] { background-color: #0D1B2A; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&display=swap');
 
-    .chat-user {
-        background: #1E3A5F;
-        border-radius: 16px 16px 4px 16px;
-        padding: 12px 16px;
-        margin: 6px 0 6px 15%;
-        color: #E8F4FD;
-        font-size: 15px;
+    :root {
+        --bg-dark: #0A0C10;
+        --sidebar-bg: #0F1219;
+        --card-bg: rgba(23, 28, 40, 0.7);
+        --accent-primary: #7C4DFF;
+        --accent-secondary: #00E5FF;
+        --text-main: #E1E4E8;
+        --glass-border: rgba(255, 255, 255, 0.08);
     }
-    .chat-agent {
-        background: #142038;
-        border: 1px solid #1E4080;
-        border-radius: 4px 16px 16px 16px;
-        padding: 14px 18px;
-        margin: 6px 15% 6px 0;
+
+    .stApp { background-color: var(--bg-dark); font-family: 'Inter', sans-serif; }
+    section[data-testid="stSidebar"] { 
+        background-color: var(--sidebar-bg); 
+        border-right: 1px solid var(--glass-border);
+    }
+
+    /* Message Bubbles */
+    .chat-user {
+        background: linear-gradient(135deg, var(--accent-primary), #5E35B1);
+        border-radius: 20px 20px 4px 20px;
+        padding: 14px 20px;
+        margin: 10px 0 10px 15%;
         color: #FFFFFF;
         font-size: 15px;
+        box-shadow: 0 4px 15px rgba(124, 77, 255, 0.2);
+    }
+    .chat-agent {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 4px 20px 20px 20px;
+        padding: 16px 22px;
+        margin: 10px 15% 10px 0;
+        color: var(--text-main);
+        font-size: 15px;
         line-height: 1.6;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
+
+    /* Profile Card */
     .profile-card {
-        background: #142038;
-        border: 1px solid #1E4080;
-        border-left: 4px solid #4A9EFF;
-        border-radius: 8px;
-        padding: 12px 14px;
-        margin: 6px 0;
+        background: linear-gradient(145deg, rgba(30, 40, 60, 0.6), rgba(15, 20, 30, 0.8));
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-left: 4px solid var(--accent-secondary);
+        border-radius: 16px;
+        padding: 16px;
+        margin: 10px 0;
+        transition: transform 0.2s ease;
     }
+    .profile-card:hover { transform: scale(1.02); }
+
     .metric-mini {
-        background: #0D1B2A;
-        border: 1px solid #1E3560;
-        border-radius: 8px;
-        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 10px;
         text-align: center;
     }
-    .stat-number { font-size: 22px; font-weight: bold; color: #4A9EFF; }
-    .stat-label  { font-size: 11px; color: #6688AA; }
-    .log-entry {
-        font-family: monospace;
-        font-size: 11px;
-        color: #6699BB;
-        padding: 3px 0;
-        border-bottom: 1px solid #1A2A3A;
+    .stat-number { 
+        font-family: 'Outfit', sans-serif;
+        font-size: 26px; 
+        font-weight: 700; 
+        background: linear-gradient(to right, var(--accent-secondary), #80CBC4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
+    .stat-label { font-size: 11px; color: #8B949E; text-transform: uppercase; letter-spacing: 1px; }
+
+    .log-entry {
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        color: #8B949E;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
     .badge {
         display: inline-block;
-        padding: 3px 10px;
-        border-radius: 12px;
+        padding: 4px 12px;
+        border-radius: 20px;
         font-size: 11px;
-        font-weight: bold;
-        margin: 2px;
+        font-weight: 600;
+        margin: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .badge-blue   { background: #1E3A6E; color: #4A9EFF; }
-    .badge-green  { background: #0D3020; color: #44CC88; }
-    .badge-red    { background: #3A1020; color: #FF6688; }
-    .badge-orange { background: #3A2010; color: #FFAA44; }
+    .badge-blue   { background: rgba(0, 229, 255, 0.1); color: var(--accent-secondary); border: 1px solid rgba(0, 229, 255, 0.2); }
+    .badge-green  { background: rgba(0, 255, 136, 0.1); color: #00FF88; border: 1px solid rgba(0, 255, 136, 0.2); }
+    .badge-red    { background: rgba(255, 51, 102, 0.1); color: #FF3366; border: 1px solid rgba(255, 51, 102, 0.2); }
+    .badge-orange { background: rgba(255, 153, 0, 0.1); color: #FF9900; border: 1px solid rgba(255, 153, 0, 0.2); }
 
-    div[data-testid="stChatMessage"] { background: transparent !important; }
-    .stTextInput input { background: #1A2A3A !important; color: white !important; }
-    .stSelectbox > div { background: #1A2A3A !important; }
-    h1, h2, h3 { color: #FFFFFF !important; }
+    h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 700; color: #FFFFFF !important; }
+    
+    /* Animation */
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+    .floating { animation: float 4s ease-in-out infinite; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -97,7 +142,7 @@ def init_state():
         "profile": None,
         "agent": None,
         "messages": [],             # [{role, content}]
-        "api_key": os.environ.get("GEMINI_API_KEY", ""),
+        "api_key": load_api_key(),
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -116,6 +161,7 @@ def show_onboarding():
         <div style='font-size:56px;'>🎓</div>
         <h1 style='font-size:36px; margin:8px 0;'>LearnMate AI</h1>
         <p style='color:#6688AA; font-size:16px;'>
+            <small style='color:#6688AA; font-size:12px;'>by Ankit Mathur for APL 2026</small><br>
             Your personal adaptive tutor — for any subject, any age, any pace.
         </p>
     </div>
@@ -155,15 +201,26 @@ def show_onboarding():
         learning_style = st.selectbox(
             "How do you learn best?",
             list(LEARNING_STYLES.keys()),
-            help="\n".join([f"{k}: {v[:80]}..." for k, v in LEARNING_STYLES.items()])
+            help="".join([f"{k}: {v[:80]}..." for k, v in LEARNING_STYLES.items()])
         )
         difficulty = st.selectbox("Starting level", DIFFICULTY_LEVELS)
-        api_key = st.text_input(
-            "🔑 Gemini API Key",
-            value=st.session_state.api_key,
-            type="password",
-            help="Free key at aistudio.google.com/apikey",
-        )
+        # ── API Key: auto-loaded on Cloud, manual fallback locally ──────
+        auto_key = st.session_state.api_key
+        if auto_key:
+            st.markdown(
+                f"<div style='background:#0D2A1A; border:1px solid #1A5A2A; border-radius:6px; "
+                f"padding:8px 12px; font-size:12px; color:#44CC88;'"
+                f">🔒 API Key pre-loaded automatically<br></div>",
+                unsafe_allow_html=True
+            )
+            api_key = auto_key
+        else:
+            api_key = st.text_input(
+                "🔑 Gemini API Key",
+                value="",
+                type="password",
+                help="Get free key at aistudio.google.com/apikey",
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -198,7 +255,7 @@ def show_onboarding():
         )
         store = get_store()
         store.save(profile)
-        st.session_state.api_key = api_key
+        st.session_state.api_key = api_key.strip()
         st.session_state.profile = profile
         _start_chat_session(profile)
         st.rerun()
@@ -224,7 +281,7 @@ def show_chat():
 
     # ── Sidebar ───────────────────────────────────────────────────────────────
     with st.sidebar:
-        st.markdown("### 🎓 LearnMate AI")
+        st.markdown("### 🎓 LearnMate AI (by Ankit Mathur for APL 2026)")
         st.markdown("---")
 
         # Profile card
@@ -242,6 +299,26 @@ def show_chat():
             <span class='badge badge-{diff_color}'>{profile.current_difficulty}</span>
         </div>
         """, unsafe_allow_html=True)
+
+
+        # Knowledge Constellation
+        st.markdown("<div style='text-align:center;' class='floating'>", unsafe_allow_html=True)
+        
+        def draw_constellation(learned_count):
+            import random
+            random.seed(42)
+            count = min(max(learned_count, 8), 25)
+            stars = [{"x": random.randint(50, 350), "y": random.randint(50, 350), "r": random.randint(2, 5)} for _ in range(count)]
+            svg = f'<svg viewBox="0 0 400 400" width="100%" style="max-height:200px;">'
+            for i in range(len(stars)-1):
+                svg += f'<line x1="{stars[i]["x"]}" y1="{stars[i]["y"]}" x2="{stars[i+1]["x"]}" y2="{stars[i+1]["y"]}" stroke="#7C4DFF" stroke-width="0.5" opacity="0.4" />'
+            for s in stars:
+                svg += f'<circle cx="{s["x"]}" cy="{s["y"]}" r="{s["r"]}" fill="#00E5FF" opacity="0.8"><animate attributeName="r" values="{s["r"]};{s["r"]+2};{s["r"]}" dur="{random.randint(2,4)}s" repeatCount="indefinite" /></circle>'
+            svg += '</svg>'
+            return svg
+            
+        st.markdown(draw_constellation(profile.total_concepts_learned), unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         # KPIs
         k1, k2 = st.columns(2)
@@ -319,7 +396,7 @@ def show_chat():
             st.rerun()
 
     # ── Main chat area ────────────────────────────────────────────────────────
-    st.markdown(f"## 🎓 Learning with LearnMate AI")
+    st.markdown(f"## 🎓 Learning with LearnMate AI (by Ankit Mathur for APL 2026)")
     st.markdown(f"*{profile.age_group} · {profile.domain} · {profile.current_difficulty}*")
     st.markdown("---")
 
@@ -343,7 +420,7 @@ def show_chat():
                         unsafe_allow_html=True)
         else:
             # Convert markdown-ish content for HTML display
-            content = msg["content"].replace("\n", "<br>").replace("**", "<b>", 1)
+            content = msg["content"].replace("", "<br>").replace("**", "<b>", 1)
             st.markdown(f"<div class='chat-agent'>🎓 <b>LearnMate</b><br><br>{msg['content']}</div>",
                         unsafe_allow_html=True)
 
@@ -370,7 +447,7 @@ def _handle_message(user_input: str):
         try:
             response = agent.send_message(user_input)
         except Exception as e:
-            response = f"Something went wrong: {str(e)}\n\nPlease check your API key and try again."
+            response = f"Something went wrong: {str(e)} Please check your API key and try again."
 
     st.session_state.messages.append({"role": "assistant", "content": response})
 

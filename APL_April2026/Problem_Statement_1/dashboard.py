@@ -1,3 +1,6 @@
+# PROJECT : SmartVenue AI — Crowd Management Agent
+# FILE    : dashboard.py
+# DEPLOY  : gcloud run deploy smartvenue-ai
 """
 dashboard.py
 ------------
@@ -10,11 +13,12 @@ import os
 import json
 import time
 import streamlit as st
+from key_manager import load_api_key, mask_key
 from venue_simulator import VenueSimulator, ZONES, GATES
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="SmartVenue AI",
+    page_title="SmartVenue AI APL Ankit Mathur",
     page_icon="🏏",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -22,46 +26,121 @@ st.set_page_config(
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
+
 <style>
-    .main { background-color: #0A0F1E; color: #ffffff; }
-    .stApp { background-color: #0A0F1E; }
-    .metric-card {
-        background: #142038;
-        border: 1px solid #1E3560;
-        border-left: 4px solid #CC1A1A;
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin: 6px 0;
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;700&display=swap');
+
+    :root {
+        --bg-dark: #050810;
+        --card-bg: rgba(20, 32, 56, 0.7);
+        --accent-red: #FF3333;
+        --accent-green: #00FF88;
+        --accent-orange: #FF9900;
+        --accent-blue: #4A9EFF;
+        --border-color: rgba(74, 158, 255, 0.2);
     }
-    .critical { border-left-color: #FF0000 !important; background: #2A0A0A; }
-    .high     { border-left-color: #FF6600 !important; background: #2A1A0A; }
-    .normal   { border-left-color: #00CC44 !important; }
+
+    .main { background-color: var(--bg-dark); color: #ffffff; font-family: 'Outfit', sans-serif; }
+    .stApp { background-color: var(--bg-dark); }
+    
+    /* Glassmorphism Card */
+    .metric-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 8px 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+    .metric-card:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-2px);
+    }
+
+    .critical { 
+        border-left: 4px solid var(--accent-red); 
+        background: rgba(255, 51, 51, 0.1);
+        animation: pulse-red 2s infinite;
+    }
+    .high { 
+        border-left: 4px solid var(--accent-orange); 
+        background: rgba(255, 153, 0, 0.1);
+    }
+    .normal { 
+        border-left: 4px solid var(--accent-green);
+        background: rgba(0, 255, 136, 0.05);
+    }
+
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 51, 51, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); }
+    }
+
     .action-log {
-        background: #0E1424;
-        border: 1px solid #1E3560;
+        background: rgba(10, 15, 30, 0.8);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         padding: 12px;
-        font-family: monospace;
+        font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
         max-height: 300px;
         overflow-y: auto;
     }
+
     .agent-thinking {
-        background: #0D2040;
-        border: 1px solid #CC1A1A;
-        border-radius: 8px;
-        padding: 16px;
-        margin: 8px 0;
+        background: rgba(13, 32, 64, 0.8);
+        border: 1px solid var(--accent-red);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 0 20px rgba(255, 51, 51, 0.2);
     }
-    h1, h2, h3 { color: #FFFFFF !important; }
-    .stSlider > div > div > div { background: #CC1A1A !important; }
+
+    h1, h2, h3 { 
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: #FFFFFF !important; 
+    }
+
+    .stSlider > div > div > div { background: var(--accent-red) !important; }
+    
     div[data-testid="metric-container"] {
-        background: #142038;
-        border: 1px solid #1E3560;
-        border-radius: 8px;
-        padding: 8px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Custom Ticker */
+    .ticker-wrap {
+        width: 100%;
+        overflow: hidden;
+        background-color: rgba(255, 51, 51, 0.1);
+        padding: 10px 0;
+        border-bottom: 1px solid var(--accent-red);
+        margin-bottom: 20px;
+    }
+    .ticker {
+        display: inline-block;
+        white-space: nowrap;
+        padding-right: 100%;
+        animation: ticker 30s linear infinite;
+        color: var(--accent-red);
+        font-weight: bold;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    @keyframes ticker {
+        0% { transform: translate3d(0, 0, 0); }
+        100% { transform: translate3d(-100%, 0, 0); }
     }
 </style>
+
 """, unsafe_allow_html=True)
 
 
@@ -71,7 +150,7 @@ if "sim" not in st.session_state:
 if "agent_result" not in st.session_state:
     st.session_state.agent_result = None
 if "api_key" not in st.session_state:
-    st.session_state.api_key = os.environ.get("GEMINI_API_KEY", "")
+    st.session_state.api_key = load_api_key()
 if "auto_run" not in st.session_state:
     st.session_state.auto_run = False
 
@@ -83,13 +162,25 @@ with st.sidebar:
     st.markdown("*Google Cloud · Build with AI*")
     st.markdown("---")
 
-    api_key = st.text_input(
-        "🔑 Gemini API Key",
-        value=st.session_state.api_key,
-        type="password",
-        help="Get free key at aistudio.google.com/apikey",
-    )
-    st.session_state.api_key = api_key
+    # Auto-loaded on Cloud Run, manual fallback locally
+    auto_key = st.session_state.api_key
+    if auto_key:
+        st.markdown(
+            f"<div style='background:#0D2A1A;border:1px solid #1A5A2A;border-radius:6px;"
+            f"padding:8px 12px;font-size:12px;color:#44CC88;'>"
+            f"🔒 API Key pre-loaded automatically<br></div>",
+            unsafe_allow_html=True
+        )
+        api_key = auto_key
+    else:
+        api_key = st.text_input(
+            "🔑 Gemini API Key",
+            value="",
+            type="password",
+            help="Get free key at aistudio.google.com/apikey",
+        )
+        if api_key:
+            st.session_state.api_key = api_key
 
     st.markdown("---")
     match_minute = st.slider(
@@ -138,8 +229,20 @@ with st.sidebar:
         match_minute = 385
 
 
+# ── Ticker ────────────────────────────────────────────────────────────────────
+if snapshot.alert_events:
+    alerts_text = " • ".join([f"🚨 {a['priority']}: {a['location']} - {a['detail']}" for a in snapshot.alert_events])
+    st.markdown(f"""
+    <div class="ticker-wrap">
+        <div class="ticker">
+            {alerts_text} • {alerts_text}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ── Main dashboard ────────────────────────────────────────────────────────────
 st.markdown("# 🏟 SmartVenue AI — Live Operations Dashboard")
+st.markdown(f"(by Ankit Mathur for APL 2026)")
 st.markdown(f"**Match Minute {match_minute}** · Phase: *{snapshot.phase_name}*")
 
 # ── Top KPI row ───────────────────────────────────────────────────────────────
@@ -167,7 +270,39 @@ st.markdown("---")
 left, right = st.columns([1, 1])
 
 with left:
-    st.markdown("### 📍 Zone Density Map")
+    st.markdown("### 🗺️ Live Stadium Heatmap")
+    
+    def get_color(density):
+        if density >= 90: return "#FF3333"
+        if density >= 75: return "#FF9900"
+        return "#00FF88"
+
+    sectors = {
+        "North_Stand":   "M200,200 L200,50 A150,150 0 0,1 306,94 Z",
+        "Premium_Lounge": "M200,200 L306,94 A150,150 0 0,1 350,200 Z",
+        "East_Stand":    "M200,200 L350,200 A150,150 0 0,1 306,306 Z",
+        "South_Stand":   "M200,200 L306,306 A150,150 0 0,1 200,350 Z",
+        "General_Stand": "M200,200 L200,350 A150,150 0 0,1 94,306 Z",
+        "West_Stand":    "M200,200 L94,306 A150,150 0 0,1 50,200 Z",
+        "Food_Court_A":  "M200,200 L50,200 A150,150 0 0,1 94,94 Z",
+        "Food_Court_B":  "M200,200 L94,94 A150,150 0 0,1 200,50 Z"
+    }
+    
+    svg = """<svg viewBox="0 0 400 400" width="100%" style="max-height:400px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));">
+        <circle cx="200" cy="200" r="160" fill="none" stroke="#1E3560" stroke-width="1" />
+        <circle cx="200" cy="200" r="80" fill="#0D2010" stroke="#00FF88" stroke-width="2" opacity="0.3"/>
+        <text x="200" y="205" text-anchor="middle" fill="#00FF88" font-size="12" font-family="Outfit">PITCH</text>
+    """
+    for zone_id, path in sectors.items():
+        density = snapshot.zones.get(zone_id).density if zone_id in snapshot.zones else 0
+        color = get_color(density)
+        svg += f'<path d="{path}" fill="{color}" stroke="#050810" stroke-width="2" opacity="0.7"><title>{zone_id}: {density}%</title></path>'
+    svg += "</svg>"
+    
+    st.markdown(svg, unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown("### 📍 Zone Density Details")
     for zone_id in ZONES:
         z = snapshot.zones[zone_id]
         status = sim._density_status(z.density)
@@ -319,7 +454,7 @@ else:
 st.markdown("---")
 st.markdown(
     "<center style='color:#556688; font-size:12px;'>"
-    "SmartVenue AI · Google Cloud Build with AI · Agentic Premier League · 2026"
+    "SmartVenue AI · Google Cloud Build with AI · Ankit Mathur · Agentic Premier League · 2026"
     "</center>",
     unsafe_allow_html=True,
 )

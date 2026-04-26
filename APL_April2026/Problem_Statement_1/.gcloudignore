@@ -1,0 +1,8 @@
+.gcloudignore
+.git
+.gitignore
+.venv/
+bin/
+obj/
+*.pyc
+__pycache__/

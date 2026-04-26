@@ -1,2 +1,6 @@
+# PROJECT : LearnMate AI — Adaptive Learning Agent
+# FILE    : requirements.txt
+# DEPLOY  : gcloud run deploy learnmate-ai
 google-generativeai>=0.8.0
 streamlit>=1.30.0
+google-cloud-secret-manager>=2.16.0
