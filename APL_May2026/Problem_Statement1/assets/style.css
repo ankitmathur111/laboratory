@@ -1,0 +1,87 @@
+/* ── CricketLens AI – Custom Styles ─────────────────────────────── */
+
+/* Hero Header */
+.hero-header {
+    background: linear-gradient(135deg, #1a472a 0%, #2d6a4f 50%, #1b4332 100%);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+}
+.hero-header h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -1px;
+}
+.hero-header p {
+    font-size: 1.05rem;
+    color: #a8d5ba;
+    margin: 0;
+}
+
+/* Metric Cards */
+.metric-card {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.75rem;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+    border-color: #22c55e;
+}
+.metric-label {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+}
+.metric-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f0fdf4;
+}
+
+/* Commentary Box */
+.commentary-box {
+    background: linear-gradient(135deg, #052e16, #14532d);
+    border-left: 4px solid #22c55e;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    color: #dcfce7;
+    font-style: italic;
+    line-height: 1.7;
+    font-size: 0.97rem;
+}
+
+/* Placeholder */
+.placeholder-box {
+    background: #0f172a;
+    border: 2px dashed #334155;
+    border-radius: 16px;
+    padding: 3rem;
+    text-align: center;
+    color: #94a3b8;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+/* Sidebar branding */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0a0e1a, #0f1929);
+}
+
+/* Remove Streamlit default padding issues */
+.block-container {
+    padding-top: 1rem !important;
+}

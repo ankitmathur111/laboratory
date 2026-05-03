@@ -1,0 +1,14 @@
+[server]
+port = 8080
+address = "0.0.0.0"
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+maxUploadSize = 200
+
+[theme]
+base = "dark"
+primaryColor = "#22c55e"
+backgroundColor = "#0a0f1e"
+secondaryBackgroundColor = "#0f172a"
+textColor = "#f8fafc"
