@@ -10,7 +10,7 @@ set -e
 PROJECT_ID=$(gcloud config get-value project)
 SERVICE_NAME="cricketlens-ai"
 REGION="us-central1"
-IMAGE="gcr.io/$PROJECT_ID/$SERVICE_NAME"
+IMAGE="us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$SERVICE_NAME"
 
 echo "🏏 Deploying CricketLens AI to Google Cloud Run"
 echo "   Project : $PROJECT_ID"
@@ -32,7 +32,8 @@ gcloud run deploy "$SERVICE_NAME" \
   --memory 1Gi \
   --cpu 1 \
   --max-instances 5 \
-  --port 8080
+  --port 8080 \
+  --set-env-vars GEMINI_API_KEY="AIzaSyCETj8BPT__aN9y8JRFgzFPmoUQBnaviwM"
 
 echo ""
 echo "✅ Deployment complete!"

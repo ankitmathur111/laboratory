@@ -38,9 +38,13 @@ with st.sidebar:
     st.divider()
 
     st.markdown("### 🔑 Gemini API Key")
+    # Check for default key in environment
+    default_key = os.getenv("GEMINI_API_KEY", "")
+    
     api_key = st.text_input(
         "Enter your Gemini API Key",
         type="password",
+        value=default_key,
         placeholder="AIza...",
         help="Get your key at https://aistudio.google.com",
         key="gemini_api_key_input",
@@ -113,6 +117,13 @@ with tab1:
                 type=["mp4", "mov", "avi", "mkv"],
                 help="We will extract the first meaningful frame for analysis.",
             )
+
+        if uploaded_file:
+            st.markdown("#### 👁️ Preview")
+            if upload_mode == "Image":
+                st.image(uploaded_file, use_container_width=True)
+            else:
+                st.video(uploaded_file)
 
         # Extra context
         st.markdown("### ✏️ Add Context (optional)")

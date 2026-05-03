@@ -59,7 +59,7 @@ class CricketAnalyzer:
             self.client = genai.Client(api_key=api_key)
         else:
             genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel("gemini-1.5-flash")
+            self.model = genai.GenerativeModel("gemini-2.5-flash")
 
     def _extract_frame_from_video(self, video_file) -> Image.Image:
         """Extract a frame from video using OpenCV."""
@@ -90,7 +90,7 @@ class CricketAnalyzer:
         """Call Gemini API with image and return text response."""
         if NEW_SDK:
             response = self.client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=[
                     types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"),
                     prompt,
