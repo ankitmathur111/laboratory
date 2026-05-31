@@ -47,7 +47,7 @@ def main():
     
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.62.1/build/stlite.css"
+      href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.0/build/stlite.css"
     />
     <style>
       body, html {{
@@ -119,7 +119,7 @@ def main():
     <div id="root"></div>
     
     <script type="module">
-      import {{ mount }} from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.62.1/build/stlite.js";
+      import {{ mount }} from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.0/build/stlite.js";
       
       // Decode the files from Base64
       const filesB64 = "{b64_string}";
@@ -128,7 +128,7 @@ def main():
       
       mount(
         {{
-          requirements: ["pandas", "plotly", "pydeck", "pydantic==1.10.12"],
+          requirements: ["pandas", "plotly", "pydantic"],
           entrypoint: "app.py",
           files: files,
           style: {{

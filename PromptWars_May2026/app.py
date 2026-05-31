@@ -2,7 +2,7 @@ import streamlit as st
 import datetime
 import pandas as pd
 import plotly.express as px
-import pydeck as pdk
+import plotly.graph_objects as go
 
 from src.models import TripRequest, Itinerary, DaySchedule
 from src.database import DESTINATIONS
@@ -303,90 +303,68 @@ else:
                 st.markdown("</div>", unsafe_allow_html=True)
                 st.markdown(f"<div style='text-align:right; font-weight:500; color:#059669; margin-top:10px;'>Day Total Expenses: ${selected_day.total_cost:.2f}</div>", unsafe_allow_html=True)
             
-            # --- RIGHT: Geographic PyDeck Map ---
+            # --- RIGHT: Plotly Interactive Route Map ---
             with col_map:
-                st.markdown("<h4>Route Map (3D Geo-Visualizer)</h4>", unsafe_allow_html=True)
+                st.markdown("<h4>Route Map (Geo-Visualizer)</h4>", unsafe_allow_html=True)
                 
                 # Gather location points for this day
                 map_points = []
-                path_coords = []
+                path_lats = []
+                path_lons = []
                 
                 for sa in selected_day.activities:
                     if sa.type in ["activity", "restaurant", "hotel"] and not sa.name.startswith("Depart"):
-                        color = [255, 51, 102] if sa.type == "activity" else ([5, 150, 105] if sa.type == "restaurant" else [102, 34, 255])
-                        
+                        color_map = {"activity": "#FF3366", "restaurant": "#05966940", "hotel": "#6622FF"}
                         map_points.append({
                             "name": sa.name,
                             "lat": sa.location.lat,
                             "lon": sa.location.lon,
-                            "type": sa.type,
-                            "color": color,
-                            "radius": 150 if sa.type == "hotel" else 80
+                            "type": sa.type.capitalize(),
+                            "color": color_map.get(sa.type, "#00C8FF")
                         })
-                        
                     if sa.type != "transit":
-                        path_coords.append([sa.location.lon, sa.location.lat])
+                        path_lats.append(sa.location.lat)
+                        path_lons.append(sa.location.lon)
                 
-                # Ensure we have coordinates to display
                 if map_points:
                     df_points = pd.DataFrame(map_points)
-                    
-                    # Target center based on coordinates
                     avg_lat = df_points["lat"].mean()
                     avg_lon = df_points["lon"].mean()
-                    
-                    # Create scatter layer for dots
-                    scatter_layer = pdk.Layer(
-                        "ScatterplotLayer",
+
+                    color_seq = {"Activity": "#FF3366", "Restaurant": "#059669", "Hotel": "#6622FF"}
+
+                    fig_map = px.scatter_mapbox(
                         df_points,
-                        get_position="[lon, lat]",
-                        get_color="color",
-                        get_radius="radius",
-                        pickable=True,
-                        radius_scale=1.0,
-                        radius_min_pixels=6,
-                        radius_max_pixels=15
+                        lat="lat",
+                        lon="lon",
+                        hover_name="name",
+                        color="type",
+                        color_discrete_map=color_seq,
+                        zoom=12,
+                        center={"lat": avg_lat, "lon": avg_lon},
+                        mapbox_style="open-street-map",
+                        height=420
                     )
-                    
-                    # Create PathLayer for connecting lines
-                    path_data = [{"path": path_coords, "color": [255, 153, 51, 170]}]
-                    path_layer = pdk.Layer(
-                        "PathLayer",
-                        path_data,
-                        get_path="path",
-                        get_color="color",
-                        width_min_pixels=3,
-                        width_max_pixels=6,
-                        pickable=True
+
+                    # Add route line connecting points
+                    if len(path_lats) > 1:
+                        fig_map.add_trace(
+                            go.Scattermapbox(
+                                lat=path_lats,
+                                lon=path_lons,
+                                mode="lines",
+                                line=dict(width=3, color="#FF9933"),
+                                name="Route",
+                                hoverinfo="skip"
+                            )
+                        )
+
+                    fig_map.update_layout(
+                        margin=dict(l=0, r=0, t=0, b=0),
+                        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),
+                        paper_bgcolor="rgba(0,0,0,0)"
                     )
-                    
-                    # Text Labels Layer
-                    text_layer = pdk.Layer(
-                        "TextLayer",
-                        df_points,
-                        get_position="[lon, lat]",
-                        get_text="name",
-                        get_color="[11, 27, 61, 240]",
-                        get_size=13,
-                        get_alignment_baseline="'bottom'",
-                        get_pixel_offset="[0, -10]",
-                        pickable=False
-                    )
-                    
-                    # Build deck
-                    deck = pdk.Deck(
-                        layers=[path_layer, scatter_layer, text_layer],
-                        initial_view_state=pdk.ViewState(
-                            latitude=avg_lat,
-                            longitude=avg_lon,
-                            zoom=11.5,
-                            pitch=40
-                        ),
-                        map_style="mapbox://styles/mapbox/light-v9",
-                        tooltip={"html": "<b>Location:</b> {name}<br/><b>Type:</b> {type}"}
-                    )
-                    
-                    st.pydeck_chart(deck, use_container_width=True)
+                    st.plotly_chart(fig_map, use_container_width=True, config={"displayModeBar": False})
                 else:
                     st.warning("No geographical coordinates available for map rendering.")
 
