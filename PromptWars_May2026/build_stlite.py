@@ -113,7 +113,7 @@ def main():
     <div id="loading-screen">
       <div class="spinner"></div>
       <h2 class="loading-title">VOYAGEFLOW</h2>
-      <p class="loading-subtitle">Initializing In-Browser AI Engine...</p>
+      <p class="loading-subtitle">Initializing In-Browser AI Engine | Prompt Wars May 2026 Submission by Ankit Mathur</p>
     </div>
     
     <div id="root"></div>

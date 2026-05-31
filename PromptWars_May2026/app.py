@@ -35,7 +35,7 @@ if "event_explanation" not in st.session_state:
 col_header_title, col_header_logo = st.columns([5, 1])
 with col_header_title:
     st.markdown("<h1 class='glow-text' style='font-size: 3rem; margin-bottom: 0px;'>VOYAGEFLOW</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size: 1.1rem; color: rgba(255,255,255,0.7); margin-top: 5px; margin-bottom: 25px;'>Spatiotemporal AI Travel Planner with Real-Time Dynamic Rerouting</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 1.1rem; color: rgba(11, 27, 61, 0.7); margin-top: 5px; margin-bottom: 25px;'>Spatiotemporal AI Travel Planner with Real-Time Dynamic Rerouting | <strong>Prompt Wars May 2026 Submission by Ankit Mathur</strong></p>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------
 # SIDEBAR - THE PREFERENCE & CONSTRAINT HUB

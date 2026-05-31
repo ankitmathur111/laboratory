@@ -104,7 +104,15 @@ def create_presentation():
     p4.font.italic = True
     p4.font.color.rgb = RGBColor(160, 180, 210)
     p4.font.name = 'Arial'
-    p4.space_before = Pt(40)
+    p4.space_before = Pt(30)
+    
+    p5 = tf1.add_paragraph()
+    p5.text = "Prompt Wars May 2026 Submission by Ankit Mathur"
+    p5.font.size = Pt(14)
+    p5.font.bold = True
+    p5.font.color.rgb = GOLD
+    p5.font.name = 'Arial'
+    p5.space_before = Pt(10)
 
     # =========================================================================
     # SLIDE 2: THE VISION (Light Theme + Image)
