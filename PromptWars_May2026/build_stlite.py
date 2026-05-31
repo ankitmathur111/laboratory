@@ -121,33 +121,62 @@ def main():
     <script type="module">
       import {{ mount }} from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.0/build/stlite.js";
       
-      // Decode the files from Base64
       const filesB64 = "{b64_string}";
-      const filesJson = atob(filesB64);
-      const files = JSON.parse(filesJson);
       
-      mount(
-        {{
-          requirements: ["pandas", "plotly", "pydantic"],
-          entrypoint: "app.py",
-          files: files,
-          style: {{
-            base: "light",
-            primaryColor: "#1E3A8A",
-            backgroundColor: "#FFFFFF",
-            secondaryBackgroundColor: "#F8FAFC",
-            textColor: "#0B1B3D"
-          }}
-        }},
-        document.getElementById("root")
-      ).then(() => {{
-        // Fade out and remove loading screen once application mounts successfully
+      // Decode the files from Base64 securely preserving UTF-8 Unicode characters
+      let files = {{}};
+      try {{
+        const binaryString = atob(filesB64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {{
+          bytes[i] = binaryString.charCodeAt(i);
+        }}
+        const jsonStr = new TextDecoder("utf-8").decode(bytes);
+        files = JSON.parse(jsonStr);
+      }} catch (err) {{
+        console.error("Decoding error:", err);
         const loader = document.getElementById("loading-screen");
-        loader.style.opacity = "0";
-        setTimeout(() => {{
-          loader.remove();
-        }}, 500);
-      }});
+        if (loader) {{
+          loader.innerHTML = `<div class="spinner" style="border-top-color: #ef4444;"></div>
+                              <h2 class="loading-title" style="color: #ef4444;">Initialization Error</h2>
+                              <p class="loading-subtitle">Failed to decode application files. ${{err.message}}</p>`;
+        }}
+      }}
+
+      if (Object.keys(files).length > 0) {{
+        mount(
+          {{
+            requirements: ["pandas", "plotly", "pydantic"],
+            entrypoint: "app.py",
+            files: files,
+            style: {{
+              base: "light",
+              primaryColor: "#1E3A8A",
+              backgroundColor: "#FFFFFF",
+              secondaryBackgroundColor: "#F8FAFC",
+              textColor: "#0B1B3D"
+            }}
+          }},
+          document.getElementById("root")
+        ).then(() => {{
+          // Fade out and remove loading screen once application mounts successfully
+          const loader = document.getElementById("loading-screen");
+          if (loader) {{
+            loader.style.opacity = "0";
+            setTimeout(() => {{
+              loader.remove();
+            }}, 500);
+          }}
+        }}).catch((err) => {{
+          console.error("Mount error:", err);
+          const loader = document.getElementById("loading-screen");
+          if (loader) {{
+            loader.innerHTML = `<div class="spinner" style="border-top-color: #ef4444;"></div>
+                                <h2 class="loading-title" style="color: #ef4444;">App Launch Error</h2>
+                                <p class="loading-subtitle">Failed to run Streamlit app: ${{err.message || err.toString()}}</p>`;
+          }}
+        }});
+      }}
     </script>
   </body>
 </html>
