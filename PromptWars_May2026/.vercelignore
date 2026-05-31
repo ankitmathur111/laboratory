@@ -1,0 +1,7 @@
+# Ignore python files in the subfolder so Vercel treats this as a purely static deployment
+app.py
+src/
+build_stlite.py
+requirements.txt
+.streamlit/
+**/__pycache__/

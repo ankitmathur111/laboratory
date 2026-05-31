@@ -1,0 +1,10 @@
+# Ignore python files so Vercel doesn't attempt to build them as serverless functions
+app.py
+src/
+PromptWars_May2026/app.py
+PromptWars_May2026/src/
+PromptWars_May2026/build_stlite.py
+build_stlite.py
+requirements.txt
+.streamlit/
+**/__pycache__/
